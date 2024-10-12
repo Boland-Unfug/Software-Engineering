@@ -1,50 +1,78 @@
 ---
 interface Props {
-	title: string;
+  title: string;
 }
-
 const { title } = Astro.props;
+
+import { ViewTransitions } from "astro:transitions";
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <ViewTransitions />
+  </head>
+  <body>
+    <nav class="flex justify-center items-center h-10">
+      <button
+        onclick="navigate('up')"
+        class="text-4xl p-4 bg-gray-200 rounded-full mr-4"
+      >
+        ↑
+      </button>
+    </nav>
+    <div
+      id="main"
+      class="bg-black text-white mx-auto px-4 py-4 border-white border-solid border-2"
+      transition:animate="slide"
+    >
+      <slot />
+    </div>
+    <nav class="flex justify-center items-center h-10">
+      <button
+        onclick="navigate('down')"
+        class="text-4xl p-4 bg-gray-200 rounded-full mr-4"
+      >
+        ↓
+      </button>
+    </nav>
+    <script>
+      // Extend the Window interface to include 'navigate'
+      declare global {
+        interface Window {
+          navigate: (direction: "up" | "down") => void;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const pages = ["/", "/projects", "/about"];
+        let currentPage = pages.indexOf(window.location.pathname); // Initialize with the current page
+
+        // Attach function to window for global access
+        window.navigate = (direction: "up" | "down"): void => {
+          if (direction === "up") {
+            currentPage =
+              currentPage === 0 ? pages.length - 1 : currentPage - 1;
+          } else {
+            currentPage =
+              currentPage === pages.length - 1 ? 0 : currentPage + 1;
+          }
+          window.location.href = pages[currentPage];
+        };
+
+        // Add event listeners
+        document
+          .getElementById("up-button")
+          ?.addEventListener("click", () => window.navigate("up"));
+        document
+          .getElementById("down-button")
+          ?.addEventListener("click", () => window.navigate("down"));
+      });
+    </script>
+  </body>
 </html>
-<style is:global>
-	:root {
-		--accent: 136, 58, 234;
-		--accent-light: 224, 204, 250;
-		--accent-dark: 49, 10, 101;
-		--accent-gradient: linear-gradient(
-			45deg,
-			rgb(var(--accent)),
-			rgb(var(--accent-light)) 30%,
-			white 60%
-		);
-	}
-	html {
-		font-family: system-ui, sans-serif;
-		background: #13151a;
-	}
-	code {
-		font-family:
-			Menlo,
-			Monaco,
-			Lucida Console,
-			Liberation Mono,
-			DejaVu Sans Mono,
-			Bitstream Vera Sans Mono,
-			Courier New,
-			monospace;
-	}
-</style>
